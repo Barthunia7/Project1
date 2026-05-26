@@ -1,10 +1,9 @@
-function App() {
+import AudioRecorder from "./components/AudioRecorder";
+
+export default function App() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-blue-100">
-      <h1 className="text-4xl font-extrabold text-blue-600 drop-shadow">
-        Speech-To-Text App Live!
-      </h1>
+    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
+      <AudioRecorder />
     </div>
   );
 }
-export default App;

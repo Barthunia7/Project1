@@ -1,0 +1,23 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "Speech to Text Application Backend",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node --dns-result-order=ipv4first index.js",
+    "dev": "nodemon --dns-result-order=ipv4first index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "mongoose": "^8.3.4",
+    "multer": "^1.4.5-lts.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.0"
+  }
+}
