@@ -1,121 +1,70 @@
+import express from 'express';
+import multer from 'multer';
 import dotenv from 'dotenv';
-import path from 'path';
+import OpenAI from 'openai';
+import cors from 'cors';
 import fs from 'fs';
+import path from 'path';
 import { fileURLToPath } from 'url';
 
-// Force absolute path mapping for the environment configuration file
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-dotenv.config({ path: path.join(__dirname, '.env') });
-
-// Core Dependencies
-import express from 'express';
-import mongoose from 'mongoose';
-import multer from 'multer';
-
-// Custom Application Models
-import Transcription from './models/Transcription.js';
+// Load environment variables
+dotenv.config();
 
 const app = express();
 
-// Middleware
+// Enable Cross-Origin Resource Sharing (CORS) so your frontend can communicate with this backend
+app.use(cors());
 app.use(express.json());
 
-// Create uploads folder automatically if it doesn't exist
-const uploadsPath = path.join(__dirname, 'uploads');
+// Handle file paths in ES Modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-if (!fs.existsSync(uploadsPath)) {
-  fs.mkdirSync(uploadsPath);
+// Ensure a temporary 'uploads' directory exists to hold incoming audio files
+const uploadDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadDir)){
+    fs.mkdirSync(uploadDir);
 }
 
-// Serve uploads folder statically
-app.use('/uploads', express.static(uploadsPath));
+// Multer configuration for temporary file storage
+const upload = multer({ dest: 'uploads/' });
 
-/* =========================
-   DATABASE CONNECTION
-========================= */
-
-mongoose.connect('mongodb://127.0.0.1:27017/speechToText')
-  .then(() => {
-    console.log('✅ MongoDB connected successfully!');
-  })
-  .catch((err) => {
-    console.error('❌ Database connection error:', err);
-  });
-
-/* =========================
-   MULTER STORAGE SETUP
-========================= */
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadsPath);
-  },
-
-  filename: (req, file, cb) => {
-    // Generate unique filename
-    const uniqueSuffix =
-      Date.now() + '-' + Math.round(Math.random() * 1E9);
-
-    cb(null, uniqueSuffix + path.extname(file.originalname));
-  }
+// Initialize OpenAI SDK
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
 });
 
-const upload = multer({ storage });
-
-/* =========================
-   ROUTES
-========================= */
-
-// Upload Audio + Save in MongoDB
-app.post('/api/upload', upload.single('audio'), async (req, res) => {
+// --- DAY 4: SPEECH-TO-TEXT API ENDPOINT ---
+app.post('/api/transcribe', upload.single('audio'), async (req, res) => {
   try {
-
-    // Check file exists
+    // 1. Validation check
     if (!req.file) {
-      return res.status(400).json({
-        error: 'No audio file provided.'
-      });
+      return res.status(400).json({ error: 'No audio file provided.' });
     }
 
-    // Dynamic file URL
-    const fileUrl =
-      `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
-
-    // Create document
-    const newTranscription = new Transcription({
-      fileName: req.file.filename,
-      fileUrl: fileUrl,
-      transcript: '',
-      status: 'pending'
+    // 2. Forward the audio file stream to OpenAI Whisper
+    const transcription = await openai.audio.transcriptions.create({
+      file: fs.createReadStream(req.file.path),
+      model: 'whisper-1',
     });
 
-    // Save to DB
-    const savedData = await newTranscription.save();
+    // 3. Clean up the temporary server file to save storage space
+    fs.unlinkSync(req.file.path);
 
-    // Success response
-    res.status(201).json({
-      message: '🚀 Audio uploaded and saved to database successfully!',
-      data: savedData
-    });
+    // 4. Return the transcribed text back to the client
+    res.json({ text: transcription.text });
 
   } catch (error) {
-
-    console.error('Upload Error:', error);
-
-    res.status(500).json({
-      error: 'Server database recording failed.'
-    });
+    console.error('Transcription error details:', error);
+    
+    // Safety cleanup if error happens during API transfer
+    if (req.file && fs.existsSync(req.file.path)) {
+        fs.unlinkSync(req.file.path);
+    }
+    
+    res.status(500).json({ error: 'Failed to process transcription.' });
   }
 });
 
-/* =========================
-   SERVER
-========================= */
-
 const PORT = process.env.PORT || 5000;
-
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-});
+app.listen(PORT, () => console.log(`🚀 Server cleanly running on port ${PORT}`));
