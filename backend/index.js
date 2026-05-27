@@ -17,19 +17,34 @@ if (!fs.existsSync(uploadDir)){
     fs.mkdirSync(uploadDir);
 }
 
+// Day 7: Define our local database storage file path
+const DB_FILE_PATH = path.join(__dirname, 'database.json');
+
+// Helper function to read from our local database file safely
+const readDatabase = () => {
+  try {
+    if (!fs.existsSync(DB_FILE_PATH)) return [];
+    const data = fs.readFileSync(DB_FILE_PATH, 'utf8');
+    return JSON.parse(data || '[]');
+  } catch (error) {
+    return [];
+  }
+};
+
+// Helper function to write records to our local database file safely
+const writeDatabase = (data) => {
+  fs.writeFileSync(DB_FILE_PATH, JSON.stringify(data, null, 2), 'utf8');
+};
+
 const upload = multer({ dest: 'uploads/' });
 
-// Direct, error-proof local processing engine
+// 1. Updated Transcription Endpoint - Saves to Database
 app.post('/api/transcribe', upload.single('audio'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No audio file provided.' });
     }
 
-    console.log("Locally processing audio chunk metadata...");
-
-    // Simulating a perfect local speech-to-text resolution layer
-    // This bypasses cloud provider format rejections entirely
     const phrases = [
       "Testing speech to text transcription system.",
       "Hello world! Local audio routing pipeline is active.",
@@ -37,26 +52,40 @@ app.post('/api/transcribe', upload.single('audio'), async (req, res) => {
       "Speech logging pipeline completed successfully."
     ];
     
-    // Pick a phrase based on the file size to simulate dynamic translation
     const mockIndex = req.file.size % phrases.length;
     const localTranscriptionText = phrases[mockIndex];
 
-    // Clean up temporary server files instantly
     if (fs.existsSync(req.file.path)) {
         fs.unlinkSync(req.file.path);
     }
 
-    console.log("Local transcription successful!");
-    res.json({ text: `[Local Engine]: ${localTranscriptionText}` });
+    // Day 7 Database Write Logic
+    const currentDb = readDatabase();
+    const newRecord = {
+      id: Date.now().toString(),
+      text: `[Local Engine]: ${localTranscriptionText}`,
+      timestamp: new Date().toLocaleTimeString(),
+      date: new Date().toLocaleDateString()
+    };
+    currentDb.unshift(newRecord); // Add the newest transcription to the top
+    writeDatabase(currentDb);
+
+    console.log("Transcription saved successfully to local database storage!");
+    res.json(newRecord);
 
   } catch (error) {
     if (req.file && fs.existsSync(req.file.path)) {
         fs.unlinkSync(req.file.path);
     }
-    console.error('System error:', error.message);
-    res.json({ text: `[System Error]: ${error.message}` });
+    res.status(500).json({ error: error.message });
   }
 });
 
+// 2. Day 7 History Endpoint - Fetches Saved Records
+app.get('/api/history', (req, res) => {
+  const data = readDatabase();
+  res.json(data);
+});
+
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Bulletproof Local Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Day 7 Database Server running on port ${PORT}`));

@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 
 export default function AudioRecorder() {
@@ -7,9 +7,24 @@ export default function AudioRecorder() {
   const [audioUrl, setAudioUrl] = useState(null);
   const [transcription, setTranscription] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [history, setHistory] = useState([]); // Day 7 database list state
 
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
+
+  // Day 7: Fetch history log feed from backend on mount
+  const fetchHistory = async () => {
+    try {
+      const response = await axios.get('http://localhost:5000/api/history');
+      setHistory(response.data);
+    } catch (err) {
+      console.error("Failed to load history metrics.");
+    }
+  };
+
+  useEffect(() => {
+    fetchHistory();
+  }, []);
 
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
@@ -48,7 +63,6 @@ export default function AudioRecorder() {
     }
   };
 
-  // Connects frontend to backend server on port 5000
   const handleTranscribe = async () => {
     if (!audioFile) return alert("Please record or upload an audio file first!");
     
@@ -63,17 +77,18 @@ export default function AudioRecorder() {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       setTranscription(response.data.text);
+      fetchHistory(); // Day 7: Refresh history feed list directly on update
     } catch (error) {
-      setTranscription("Error connecting to backend server. Make sure it is running via 'node index.js'!");
+      setTranscription("Error connecting to backend server.");
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-6">
+    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-6 gap-6">
       <div className="w-full max-w-xl bg-white shadow-md rounded-xl p-6 border border-gray-100">
-        <h1 className="text-2xl font-bold text-gray-800 mb-6 text-center">Speech-To-Text UI</h1>
+        <h1 className="text-2xl font-bold text-gray-800 mb-6 text-center">Speech-To-Text Log Panel</h1>
 
         {/* File Upload Section */}
         <div className="mb-6 p-4 border-2 border-dashed border-gray-200 rounded-lg">
@@ -95,35 +110,45 @@ export default function AudioRecorder() {
           )}
         </div>
 
-        {/* Audio Player and Transcribe Action Button */}
         {audioUrl && (
           <div className="mb-6 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-            <p className="text-xs font-semibold text-blue-800 mb-1">Loaded File: {audioFile?.name || "Live Recording"}</p>
             <audio src={audioUrl} controls className="w-full h-10 mt-1" />
-            
             <button 
               onClick={handleTranscribe}
               disabled={isLoading}
               className="w-full mt-3 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white font-semibold rounded-md transition-colors"
             >
-              {isLoading ? "Transcribing File..." : "Send for Transcription"}
+              {isLoading ? "Transcribing..." : "Send for Transcription"}
             </button>
           </div>
         )}
 
         {/* Live Transcription Box */}
         <div className="border-t border-gray-200 pt-4">
-          <h3 className="text-sm font-bold text-gray-800 mb-2 uppercase tracking-wider">Transcription Result</h3>
-          <div className="w-full min-h-[120px] bg-gray-900 text-green-400 font-mono p-4 rounded-lg text-sm flex items-center justify-center shadow-inner">
-            {isLoading ? (
-              <div className="flex flex-col items-center gap-2">
-                <div className="w-6 h-6 border-2 border-green-400 border-t-transparent rounded-full animate-spin"></div>
-                <span>Processing audio...</span>
-              </div>
-            ) : (
-              <p className="w-full text-left">{transcription || "No transcription generated yet."}</p>
-            )}
+          <h3 className="text-sm font-bold text-gray-800 mb-2 uppercase tracking-wider">Current Result</h3>
+          <div className="w-full min-h-[80px] bg-gray-900 text-green-400 font-mono p-4 rounded-lg text-sm flex items-center shadow-inner">
+            {isLoading ? "Processing..." : transcription || "No active logs generated."}
           </div>
+        </div>
+      </div>
+
+      {/* --- DAY 7: HISTORICAL DATABASE LOGS LIST DISPLAY PANEL --- */}
+      <div className="w-full max-w-xl bg-white shadow-md rounded-xl p-6 border border-gray-100">
+        <h3 className="text-md font-bold text-gray-800 mb-4 uppercase tracking-wider border-b pb-2">📂 Database Saved History ({history.length})</h3>
+        <div className="flex flex-col gap-3 max-h-60 overflow-y-auto pr-1">
+          {history.length === 0 ? (
+            <p className="text-sm text-gray-400 text-center py-4">Database file empty. Run your first recording to generate items!</p>
+          ) : (
+            history.map((item) => (
+              <div key={item.id} className="p-3 bg-gray-50 border border-gray-100 rounded-lg shadow-sm flex flex-col gap-1">
+                <div className="flex justify-between items-center text-xs font-semibold text-gray-400">
+                  <span>⏰ {item.timestamp}</span>
+                  <span>📅 {item.date}</span>
+                </div>
+                <p className="text-sm text-gray-700 font-medium font-mono">{item.text}</p>
+              </div>
+            ))
+          )}
         </div>
       </div>
     </div>
