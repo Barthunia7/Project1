@@ -1,13 +1,106 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>speech-to-text</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Speech to Text - Day 8</title>
+  <!-- Tailwind CSS Play CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen p-6 sm:p-12">
+
+  <div class="max-w-3xl mx-auto space-y-10">
+    
+    <!-- STEP 1: ENHANCED TYPOGRAPHY -->
+    <header class="text-center space-y-2">
+      <h1 class="text-4xl font-extrabold tracking-tight text-slate-900 sm:text-5xl">
+        Speech To Text
+      </h1>
+      <p class="text-lg text-slate-500">
+        Convert your voice into organized text instantly.
+      </p>
+    </header>
+
+    <!-- STEP 2 & 3: ADVANCED BUTTON DESIGN & INTERACTIVE ANIMATIONS -->
+    <main class="flex flex-col items-center justify-center p-8 bg-white rounded-2xl shadow-sm border border-slate-100">
+      
+      <!-- Interactive State Container -->
+      <button id="recordBtn" class="flex items-center justify-center w-20 h-20 rounded-full bg-indigo-600 text-white shadow-md transition-all duration-300 transform active:scale-95 focus:outline-none focus:ring-4 focus:ring-indigo-200">
+        <!-- SVG Icon wrapper -->
+        <span id="btnIcon">
+          <!-- Start Mic Icon -->
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 11c0 1.657-1.343 3-3 3s-3-1.343-3-3V5c0-1.657 1.343-3 3-3s3 1.343 3 3v6z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19 10v1a7 7 0 01-14 0v-1M12 19v4M8 23h8"/></svg>
+        </span>
+      </button>
+      
+      <!-- Status Text Label -->
+      <span id="statusLabel" class="mt-4 text-sm font-semibold tracking-wide text-slate-600 uppercase">
+        Ready to Record
+      </span>
+    </main>
+
+    <!-- STEP 4: DISPLAY HISTORY IN CARD FORMAT -->
+    <section class="space-y-4">
+      <h2 class="text-xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
+        <span>Transcription History</span>
+        <span class="text-xs bg-slate-200 text-slate-700 px-2.5 py-0.5 rounded-full font-semibold">2</span>
+      </h2>
+
+      <!-- Grid Layout for History Cards -->
+      <div class="grid gap-4">
+        
+        <!-- Card 1 -->
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm transition-all duration-300 hover:shadow-md hover:border-indigo-200 hover:-translate-y-0.5">
+          <div class="flex justify-between items-center mb-3">
+            <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">May 28, 2026</span>
+            <span class="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded font-medium">0:45</span>
+          </div>
+          <p class="text-sm text-slate-600 leading-relaxed">
+            Hello, this is a sample text generated from the first audio recording test.
+          </p>
+        </div>
+
+        <!-- Card 2 -->
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm transition-all duration-300 hover:shadow-md hover:border-indigo-200 hover:-translate-y-0.5">
+          <div class="flex justify-between items-center mb-3">
+            <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">May 27, 2026</span>
+            <span class="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded font-medium">1:12</span>
+          </div>
+          <p class="text-sm text-slate-600 leading-relaxed">
+            Implementing Tailwind CSS makes styling interfaces incredibly fast and highly customizable.
+          </p>
+        </div>
+
+      </div>
+    </section>
+
+  </div>
+
+  <!-- Small JavaScript block to demonstrate the Day 8 states live -->
+  <script>
+    const recordBtn = document.getElementById('recordBtn');
+    const btnIcon = document.getElementById('btnIcon');
+    const statusLabel = document.getElementById('statusLabel');
+    let isRecording = false;
+
+    recordBtn.addEventListener('click', () => {
+      isRecording = !isRecording;
+      
+      if (isRecording) {
+        // Switch button to Recording State (Red background + Pulse animation)
+        recordBtn.className = "flex items-center justify-center w-20 h-20 rounded-full bg-red-500 text-white shadow-md transition-all duration-300 transform active:scale-95 focus:outline-none focus:ring-4 focus:ring-red-200 animate-pulse";
+        btnIcon.innerHTML = `<svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2" /></svg>`;
+        statusLabel.innerText = "Recording... Click to Stop";
+        statusLabel.className = "mt-4 text-sm font-semibold tracking-wide text-red-500 uppercase";
+      } else {
+        // Reset button to Default State (Indigo background)
+        recordBtn.className = "flex items-center justify-center w-20 h-20 rounded-full bg-indigo-600 text-white shadow-md transition-all duration-300 transform active:scale-95 focus:outline-none focus:ring-4 focus:ring-indigo-200";
+        btnIcon.innerHTML = `<svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 11c0 1.657-1.343 3-3 3s-3-1.343-3-3V5c0-1.657 1.343-3 3-3s3 1.343 3 3v6z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19 10v1a7 7 0 01-14 0v-1M12 19v4M8 23h8"/></svg>`;
+        statusLabel.innerText = "Ready to Record";
+        statusLabel.className = "mt-4 text-sm font-semibold tracking-wide text-slate-600 uppercase";
+      }
+    });
+  </script>
+</body>
 </html>
