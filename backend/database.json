@@ -1,5 +1,17 @@
 [
   {
+    "id": "1779881263782",
+    "text": "[Local Engine]: Audio received cleanly by the backend server interface.",
+    "timestamp": "4:57:43 pm",
+    "date": "27/5/2026"
+  },
+  {
+    "id": "1779881030000",
+    "text": "[Local Engine]: Audio received cleanly by the backend server interface.",
+    "timestamp": "4:53:50 pm",
+    "date": "27/5/2026"
+  },
+  {
     "id": "1779879691591",
     "text": "[Local Engine]: Testing speech to text transcription system.",
     "timestamp": "4:31:31 pm",
