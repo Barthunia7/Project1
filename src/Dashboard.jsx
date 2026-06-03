@@ -1,22 +1,19 @@
 import { useEffect, useState } from 'react';
 import { supabase } from './supabaseClient';
-// Import your audio recorder component here:
 import AudioRecorder from './components/AudioRecorder';
+
 export default function Dashboard() {
   const [text, setText] = useState('');
   const [history, setHistory] = useState([]);
 
-    useEffect(() => {
-    // Run an initial data pull when the component mounts securely
+  useEffect(() => {
     fetchData();
   }, []);
 
-    async function fetchData() {
-    // 1. Double check who is logged in right now
+  async function fetchData() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    // 2. Query the items matching that user session securely
     const { data, error } = await supabase
       .from('transcriptions')
       .select('*')
@@ -28,7 +25,6 @@ export default function Dashboard() {
       setHistory(data);
     }
   }
-
 
   async function handleSave(e) {
     e.preventDefault();
@@ -44,7 +40,7 @@ export default function Dashboard() {
       alert(error.message);
     } else {
       setText('');
-      fetchData(); // Refresh history cards
+      fetchData(); 
     }
   }
 
@@ -61,11 +57,11 @@ export default function Dashboard() {
         </button>
       </div>
 
-      {/* Day 7/8 Audio Recording Features */}
-<div className="mb-8 p-4 bg-white border rounded shadow-sm">
- <AudioRecorder onSaveRefresh={fetchData} />
+      {/* Audio Recording Card Container */}
+      <div className="mb-8 p-4 bg-white border rounded shadow-sm">
+        <AudioRecorder onSaveRefresh={fetchData} />
+      </div>
 
-</div>
       {/* Manual Input Form */}
       <form onSubmit={handleSave} className="mb-8">
         <textarea 
@@ -81,7 +77,7 @@ export default function Dashboard() {
         </button>
       </form>
 
-      {/* Day 8 Card History Layout */}
+      {/* Layout Card History Display */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {history.map(item => (
           <div key={item.id} className="p-4 border rounded shadow-sm bg-white hover:shadow-md transition">
